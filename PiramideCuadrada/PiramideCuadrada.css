@@ -1,0 +1,84 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: cadetblue;
+}
+
+.contenedor {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    perspective: 700px;
+}
+
+.caja {
+    width: 200px;
+    height: 200px;
+    transform-style: preserve-3d;
+    animation: girar 20s ease-in-out alternate infinite;
+    position: relative;
+}
+
+/* Base cuadrada - Abajo */
+.base {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    background: black;
+    /* border: 3px solid black; */
+    transform: rotateX(90deg) translateZ(-100px);
+    box-sizing: border-box;
+}
+
+/* Caras triangulares */
+.cara {
+    position: absolute;
+    width: 200px;
+    height: 142px;
+    bottom: 0;
+    left: 0;
+    /* Pivote en el borde inferior */
+    transform-origin: bottom center;
+    /* Recorta en forma de triángulo */
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+/* Frente */
+.cara1 {
+    transform: rotateY(0deg) translateZ(100px) rotateX(45deg);
+    background: red;
+    opacity: 1;
+}
+
+/* Derecha */
+.cara2 {
+    transform: rotateY(90deg) translateZ(100px) rotateX(45deg);
+    background: orange;
+    opacity: 1;
+}
+
+/* Atrás */
+.cara3 {
+    transform: rotateY(180deg) translateZ(100px) rotateX(45deg);
+    background: yellow;
+    opacity: 1;
+}
+
+/* Izquierda */
+.cara4 {
+    transform: rotateY(-90deg) translateZ(100px) rotateX(45deg);
+    background: green;
+    opacity: 1;
+}
+
+@keyframes girar {
+    0% {
+        transform: rotateY(0deg);
+    }
+
+    100% {
+        transform: rotateY(-360deg);
+    }
+}
