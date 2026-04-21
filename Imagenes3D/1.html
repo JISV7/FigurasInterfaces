@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Composite 3D Model</title>
+    <style>
+        body {
+            background-color: #f0f0f0; /* Soft background to contrast the white/black model */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        /* * SCENE & CAMERA SETUP 
+         * The model remains stationary while the camera wrapper rotates around it.
+         */
+        .scene {
+            width: 500px;
+            height: 500px;
+            perspective: 1200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .camera {
+            position: relative;
+            width: 0;
+            height: 0;
+            transform-style: preserve-3d;
+            animation: orbit 15s linear infinite;
+        }
+
+        @keyframes orbit {
+            0% { transform: rotateX(-35deg) rotateY(0deg); }
+            100% { transform: rotateX(-35deg) rotateY(360deg); }
+        }
+
+        /* Base class for all 3D objects */
+        .part {
+            position: absolute;
+            transform-style: preserve-3d;
+        }
+
+        /* Common face styling mimicking a technical drawing */
+        .face {
+            position: absolute;
+            box-sizing: border-box;
+            background-color: #ffffff;
+            border: 2px solid #000000;
+        }
+
+        /* =========================================
+           PART 1: CENTRAL CUBE
+           A 100x100x100 box
+        ========================================= */
+        .cube-face {
+            width: 100px;
+            height: 100px;
+            left: -50px;
+            top: -50px;
+        }
+        .cube-face.front  { transform: translateZ(50px); }
+        .cube-face.back   { transform: rotateY(180deg) translateZ(50px); }
+        .cube-face.left   { transform: rotateY(-90deg) translateZ(50px); }
+        .cube-face.right  { transform: rotateY(90deg) translateZ(50px); }
+        .cube-face.bottom { transform: rotateX(-90deg) translateZ(50px); }
+        
+        .cube-face.top { 
+            transform: rotateX(90deg) translateZ(50px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Top face recessed concentric details */
+        .cube-top-detail {
+            width: 66px; 
+            height: 66px;
+            border: 2px solid black;
+            box-sizing: border-box;
+            box-shadow: inset 0 0 0 10px white, inset 0 0 0 12px black;
+        }
+
+        /* =========================================
+           PART 2: TOP WIREFRAME SPHERE
+           Radius 30px (Diameter 60px)
+        ========================================= */
+        .part.sphere {
+            /* Sitting directly on top of the cube (Cube top is Y=-50, sphere radius is 30) */
+            transform: translateY(-80px);
+        }
+        .sphere-ring {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            left: -30px;
+            top: -30px;
+            border-radius: 50%;
+            border: 1.5px solid black;
+            box-sizing: border-box;
+            background: transparent;
+        }
+        /* Vertical rings (Longitude) */
+        .sphere-ring.y1 { transform: rotateY(0deg); }
+        .sphere-ring.y2 { transform: rotateY(30deg); }
+        .sphere-ring.y3 { transform: rotateY(60deg); }
+        .sphere-ring.y4 { transform: rotateY(90deg); }
+        .sphere-ring.y5 { transform: rotateY(120deg); }
+        .sphere-ring.y6 { transform: rotateY(150deg); }
+        /* Horizontal rings (Latitude) */
+        .sphere-ring.x1 { transform: rotateX(90deg) translateZ(0); }
+        .sphere-ring.x2 { transform: rotateX(90deg) translateZ(15px) scale(0.866); }
+        .sphere-ring.x3 { transform: rotateX(90deg) translateZ(-15px) scale(0.866); }
+
+        /* =========================================
+           PART 3: LEFT SQUARE FRAME
+           Attached to left face (X=-50). Depth 30.
+        ========================================= */
+        .part.left-frame {
+            /* Position center of frame at X = -65, and point local Z leftwards */
+            transform: translateX(-65px) rotateY(-90deg);
+        }
+        
+        /* Front and Back caps of the frame */
+        .lf-face {
+            width: 80px; 
+            height: 80px;
+            position: absolute;
+            left: -40px; 
+            top: -40px;
+            border: 20px solid white;
+            box-sizing: border-box;
+            outline: 2px solid black; /* Outer stroke */
+            background: transparent;
+        }
+        .lf-face .inner-border {
+            width: 100%; height: 100%;
+            outline: 2px solid black; /* Inner stroke */
+        }
+        .lf-face.front { transform: translateZ(15px); }
+        .lf-face.back  { transform: translateZ(-15px); }
+
+        /* Outer walls */
+        .lf-ow-h { position: absolute; width: 80px; height: 30px; left: -40px; top: -15px; background: white; border: 2px solid black; box-sizing: border-box;}
+        .lf-ow-v { position: absolute; width: 30px; height: 80px; left: -15px; top: -40px; background: white; border: 2px solid black; box-sizing: border-box;}
+        .lf-ow-h.top    { transform: translateY(-40px) rotateX(90deg); }
+        .lf-ow-h.bottom { transform: translateY(40px) rotateX(-90deg); }
+        .lf-ow-v.left   { transform: translateX(-40px) rotateY(-90deg); }
+        .lf-ow-v.right  { transform: translateX(40px) rotateY(90deg); }
+
+        /* Inner walls */
+        .lf-iw-h { position: absolute; width: 40px; height: 30px; left: -20px; top: -15px; background: white; border: 2px solid black; box-sizing: border-box;}
+        .lf-iw-v { position: absolute; width: 30px; height: 40px; left: -15px; top: -20px; background: white; border: 2px solid black; box-sizing: border-box;}
+        .lf-iw-h.top    { transform: translateY(-20px) rotateX(-90deg); } /* inverted rotation for inner facing */
+        .lf-iw-h.bottom { transform: translateY(20px) rotateX(90deg); }
+        .lf-iw-v.left   { transform: translateX(-20px) rotateY(90deg); }
+        .lf-iw-v.right  { transform: translateX(20px) rotateY(-90deg); }
+
+        /* =========================================
+           PART 4: RIGHT CYLINDER RING
+           Attached to right face (X=50). Depth 30.
+        ========================================= */
+        .part.right-cylinder {
+            /* Position center of cylinder at X = 65, point local Z rightwards */
+            transform: translateX(65px) rotateY(90deg);
+        }
+
+        /* Front and Back perfect circles */
+        .rr-face {
+            width: 80px; height: 80px;
+            position: absolute; left: -40px; top: -40px;
+            border-radius: 50%;
+            border: 20px solid white;
+            box-sizing: border-box;
+            box-shadow: 0 0 0 2px black; /* Outer stroke */
+        }
+        .rr-face .inner-border {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            box-shadow: inset 0 0 0 2px black; /* Inner stroke */
+        }
+        .rr-face.front { transform: translateZ(15px); }
+        .rr-face.back  { transform: translateZ(-15px); }
+
+        /* Cylinder walls (generated as 24 strips using CSS variables for angles) */
+        .rr-side {
+            position: absolute;
+            background: white;
+            box-sizing: border-box;
+            /* Using white borders to slightly overlap adjacent faces and prevent gaps */
+            border-left: 1px solid white;
+            border-right: 1px solid white;
+        }
+        /* Width calculated based on circumference segments */
+        .rr-side.outer {
+            width: 12px; height: 30px;
+            left: -6px; top: -15px;
+            transform: rotateZ(var(--a)) translateY(-40px) rotateX(90deg);
+        }
+        .rr-side.inner {
+            width: 6px; height: 30px;
+            left: -3px; top: -15px;
+            transform: rotateZ(var(--a)) translateY(-20px) rotateX(90deg);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scene">
+        <div class="camera">
+            
+            <div class="part cube">
+                <div class="face cube-face front"></div>
+                <div class="face cube-face back"></div>
+                <div class="face cube-face left"></div>
+                <div class="face cube-face right"></div>
+                <div class="face cube-face bottom"></div>
+                <div class="face cube-face top">
+                    <div class="cube-top-detail"></div>
+                </div>
+            </div>
+
+            <div class="part sphere">
+                <div class="sphere-ring y1"></div>
+                <div class="sphere-ring y2"></div>
+                <div class="sphere-ring y3"></div>
+                <div class="sphere-ring y4"></div>
+                <div class="sphere-ring y5"></div>
+                <div class="sphere-ring y6"></div>
+                <div class="sphere-ring x1"></div>
+                <div class="sphere-ring x2"></div>
+                <div class="sphere-ring x3"></div>
+            </div>
+
+            <div class="part left-frame">
+                <div class="lf-face front"><div class="inner-border"></div></div>
+                <div class="lf-face back"><div class="inner-border"></div></div>
+                <div class="lf-ow-h top"></div>
+                <div class="lf-ow-h bottom"></div>
+                <div class="lf-ow-v left"></div>
+                <div class="lf-ow-v right"></div>
+                <div class="lf-iw-h top"></div>
+                <div class="lf-iw-h bottom"></div>
+                <div class="lf-iw-v left"></div>
+                <div class="lf-iw-v right"></div>
+            </div>
+
+            <div class="part right-cylinder">
+                <div class="rr-face front"><div class="inner-border"></div></div>
+                <div class="rr-face back"><div class="inner-border"></div></div>
+                
+                <div class="rr-side outer" style="--a: 0deg;"></div>
+                <div class="rr-side outer" style="--a: 15deg;"></div>
+                <div class="rr-side outer" style="--a: 30deg;"></div>
+                <div class="rr-side outer" style="--a: 45deg;"></div>
+                <div class="rr-side outer" style="--a: 60deg;"></div>
+                <div class="rr-side outer" style="--a: 75deg;"></div>
+                <div class="rr-side outer" style="--a: 90deg;"></div>
+                <div class="rr-side outer" style="--a: 105deg;"></div>
+                <div class="rr-side outer" style="--a: 120deg;"></div>
+                <div class="rr-side outer" style="--a: 135deg;"></div>
+                <div class="rr-side outer" style="--a: 150deg;"></div>
+                <div class="rr-side outer" style="--a: 165deg;"></div>
+                <div class="rr-side outer" style="--a: 180deg;"></div>
+                <div class="rr-side outer" style="--a: 195deg;"></div>
+                <div class="rr-side outer" style="--a: 210deg;"></div>
+                <div class="rr-side outer" style="--a: 225deg;"></div>
+                <div class="rr-side outer" style="--a: 240deg;"></div>
+                <div class="rr-side outer" style="--a: 255deg;"></div>
+                <div class="rr-side outer" style="--a: 270deg;"></div>
+                <div class="rr-side outer" style="--a: 285deg;"></div>
+                <div class="rr-side outer" style="--a: 300deg;"></div>
+                <div class="rr-side outer" style="--a: 315deg;"></div>
+                <div class="rr-side outer" style="--a: 330deg;"></div>
+                <div class="rr-side outer" style="--a: 345deg;"></div>
+
+                <div class="rr-side inner" style="--a: 0deg;"></div>
+                <div class="rr-side inner" style="--a: 15deg;"></div>
+                <div class="rr-side inner" style="--a: 30deg;"></div>
+                <div class="rr-side inner" style="--a: 45deg;"></div>
+                <div class="rr-side inner" style="--a: 60deg;"></div>
+                <div class="rr-side inner" style="--a: 75deg;"></div>
+                <div class="rr-side inner" style="--a: 90deg;"></div>
+                <div class="rr-side inner" style="--a: 105deg;"></div>
+                <div class="rr-side inner" style="--a: 120deg;"></div>
+                <div class="rr-side inner" style="--a: 135deg;"></div>
+                <div class="rr-side inner" style="--a: 150deg;"></div>
+                <div class="rr-side inner" style="--a: 165deg;"></div>
+                <div class="rr-side inner" style="--a: 180deg;"></div>
+                <div class="rr-side inner" style="--a: 195deg;"></div>
+                <div class="rr-side inner" style="--a: 210deg;"></div>
+                <div class="rr-side inner" style="--a: 225deg;"></div>
+                <div class="rr-side inner" style="--a: 240deg;"></div>
+                <div class="rr-side inner" style="--a: 255deg;"></div>
+                <div class="rr-side inner" style="--a: 270deg;"></div>
+                <div class="rr-side inner" style="--a: 285deg;"></div>
+                <div class="rr-side inner" style="--a: 300deg;"></div>
+                <div class="rr-side inner" style="--a: 315deg;"></div>
+                <div class="rr-side inner" style="--a: 330deg;"></div>
+                <div class="rr-side inner" style="--a: 345deg;"></div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
