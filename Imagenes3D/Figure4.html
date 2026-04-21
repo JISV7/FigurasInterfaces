@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Composite 3D Model</title>
+    <style>
+        body {
+            background-color: #e5e5e5;
+            /* Light gray background to enhance contrast */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        /* * =========================================
+           * SCENE & CAMERA SETUP 
+           * ========================================= */
+        .scene {
+            width: 600px;
+            height: 600px;
+            perspective: 1200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .camera {
+            position: relative;
+            width: 0;
+            height: 0;
+            transform-style: preserve-3d;
+            /* Rotate the camera around the stationary model */
+            animation: orbit 15s linear infinite;
+        }
+
+        @keyframes orbit {
+            0% {
+                transform: rotateX(-35deg) rotateY(0deg);
+            }
+
+            100% {
+                transform: rotateX(-35deg) rotateY(360deg);
+            }
+        }
+
+        /* Base class for all parts */
+        .part {
+            position: absolute;
+            transform-style: preserve-3d;
+        }
+
+        /* * =========================================
+           * PART 1: TOP CUBE (Plain White)
+           * Size: 100x100x100. Center at Y = -40px.
+           * ========================================= */
+        #cube-top {
+            transform: translateY(-40px);
+        }
+
+        .top-face {
+            position: absolute;
+            box-sizing: border-box;
+            background-color: white;
+            border: 2px solid black;
+            width: 100px;
+            height: 100px;
+            left: -50px;
+            top: -50px;
+        }
+
+        .top-face.front {
+            transform: translateZ(50px);
+        }
+
+        .top-face.back {
+            transform: rotateY(180deg) translateZ(50px);
+        }
+
+        .top-face.left {
+            transform: rotateY(-90deg) translateZ(50px);
+        }
+
+        .top-face.right {
+            transform: rotateY(90deg) translateZ(50px);
+        }
+
+        .top-face.top {
+            transform: rotateX(90deg) translateZ(50px);
+        }
+
+        .top-face.bottom {
+            transform: rotateX(-90deg) translateZ(50px);
+        }
+
+        /* * =========================================
+           * PART 2: MIDDLE CUBE (Horizontally Striped)
+           * Size: 100 wide x 80 high. Positioned below Top Cube.
+           * ========================================= */
+        #cube-mid {
+            transform: translateY(50px);
+            /* (-40 + 50) + 40 = 50 */
+        }
+
+        .mid-face {
+            position: absolute;
+            box-sizing: border-box;
+            background-color: white;
+            border: 2px solid black;
+            /* Horizontal striped texture */
+            background-image: repeating-linear-gradient(to bottom, transparent, transparent 4px, black 4px, black 5px);
+            width: 100px;
+            height: 80px;
+            left: -50px;
+            top: -40px;
+        }
+
+        .mid-face.front {
+            transform: translateZ(50px);
+        }
+
+        .mid-face.back {
+            transform: rotateY(180deg) translateZ(50px);
+        }
+
+        .mid-face.left {
+            transform: rotateY(-90deg) translateZ(50px);
+        }
+
+        .mid-face.right {
+            transform: rotateY(90deg) translateZ(50px);
+        }
+
+        /* * =========================================
+           * PART 3: INVERTED PYRAMID (Horizontally Striped)
+           * Base: 100x100. Height: 100. Positioned below Mid Cube.
+           * ========================================= */
+        #pyramid {
+            transform: translateY(90px);
+            /* 50 + 40 = 90 */
+        }
+
+        .pyr-face {
+            position: absolute;
+            width: 100px;
+            height: 111.8px;
+            /* Height = sqrt(100^2 + 50^2) */
+            left: -50px;
+            top: 0;
+            transform-origin: top center;
+            /* Using an inline SVG background to perfectly handle the triangular clip, the border, and the stripes simultaneously */
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='111.8' viewBox='0 0 100 111.8' xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3Cpattern id='s' patternUnits='userSpaceOnUse' width='100' height='5'%3E%3Crect width='100' height='4' fill='white'/%3E%3Crect y='4' width='100' height='1' fill='black'/%3E%3C/pattern%3E%3C/defs%3E%3Cpolygon points='1,1 99,1 50,110.8' fill='url(%23s)' stroke='black' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-size: 100% 100%;
+        }
+
+        /* Slant angle is atan(50/100) = 26.565deg */
+        .pyr-face.front {
+            transform: translateZ(50px) rotateX(-26.565deg);
+        }
+
+        .pyr-face.back {
+            transform: translateZ(-50px) rotateX(26.565deg);
+        }
+
+        .pyr-face.right {
+            transform: translateX(50px) rotateY(90deg) rotateX(-26.565deg);
+        }
+
+        .pyr-face.left {
+            transform: translateX(-50px) rotateY(-90deg) rotateX(-26.565deg);
+        }
+
+        /* * =========================================
+           * PART 4: CYLINDER (Attached to LEFT face of Top Cube)
+           * Radius: 30px. Length: 60px.
+           * ========================================= */
+        #cylinder {
+            /* Positioned at the center of the left face */
+            transform: translateX(-50px) translateY(-40px) rotateY(-90deg);
+        }
+
+        .cyl-cap {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            left: -30px;
+            top: -30px;
+            border-radius: 50%;
+            background-color: white;
+            border: 2px solid black;
+            box-sizing: border-box;
+            /* Vertical textured lines on the cap */
+            background-image: repeating-linear-gradient(90deg, transparent, transparent 3px, black 3px, black 4px);
+            transform: translateZ(60px);
+            /* Push out to form the end cap */
+        }
+
+        .cyl-strip {
+            position: absolute;
+            width: 8.2px;
+            height: 60px;
+            left: -4.1px;
+            top: 0;
+            background-color: white;
+            border-left: 1px solid black;
+            /* Creates the outer ribbed effect */
+            border-right: 1px solid black;
+            box-sizing: border-box;
+            transform-origin: center top;
+            /* Rotate to its position in the circle, push to rim, flip to run along Z axis */
+            transform: rotateZ(var(--a)) translateY(-30px) rotateX(-90deg);
+        }
+
+        /* * =========================================
+           * PART 5: SQUARE PANEL (Attached to FRONT face of Top Cube)
+           * Extrudes outward. Size: 80x80x20.
+           * ========================================= */
+        #panel {
+            /* Positioned at the center of the front face */
+            transform: translateZ(50px) translateY(-40px);
+        }
+
+        .pan-face {
+            position: absolute;
+            background-color: white;
+            border: 2px solid black;
+            box-sizing: border-box;
+        }
+
+        .pan-front {
+            width: 80px;
+            height: 80px;
+            left: -40px;
+            top: -40px;
+            transform: translateZ(20px);
+        }
+
+        /* Inner striped square detailed on the front face */
+        .pan-front::after {
+            content: '';
+            position: absolute;
+            inset: 10px;
+            border: 2px solid black;
+            background-image: repeating-linear-gradient(90deg, transparent, transparent 3px, black 3px, black 4px);
+        }
+
+        .pan-back {
+            width: 80px;
+            height: 80px;
+            left: -40px;
+            top: -40px;
+            transform: translateZ(0) rotateY(180deg);
+        }
+
+        .pan-left {
+            width: 20px;
+            height: 80px;
+            left: -10px;
+            top: -40px;
+            transform: translateX(-40px) translateZ(10px) rotateY(-90deg);
+        }
+
+        .pan-right {
+            width: 20px;
+            height: 80px;
+            left: -10px;
+            top: -40px;
+            transform: translateX(40px) translateZ(10px) rotateY(90deg);
+        }
+
+        .pan-top {
+            width: 80px;
+            height: 20px;
+            left: -40px;
+            top: -10px;
+            transform: translateY(-40px) translateZ(10px) rotateX(90deg);
+        }
+
+        .pan-bottom {
+            width: 80px;
+            height: 20px;
+            left: -40px;
+            top: -10px;
+            transform: translateY(40px) translateZ(10px) rotateX(-90deg);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="scene">
+        <div class="camera">
+
+            <div class="part" id="cube-top">
+                <div class="top-face front"></div>
+                <div class="top-face back"></div>
+                <div class="top-face left"></div>
+                <div class="top-face right"></div>
+                <div class="top-face top"></div>
+                <div class="top-face bottom"></div>
+            </div>
+
+            <div class="part" id="cube-mid">
+                <div class="mid-face front"></div>
+                <div class="mid-face back"></div>
+                <div class="mid-face left"></div>
+                <div class="mid-face right"></div>
+            </div>
+
+            <div class="part" id="pyramid">
+                <div class="pyr-face front"></div>
+                <div class="pyr-face back"></div>
+                <div class="pyr-face left"></div>
+                <div class="pyr-face right"></div>
+            </div>
+
+            <div class="part" id="cylinder">
+                <div class="part" id="cylinder">
+                    <!-- Front circular face (visible end) -->
+                    <div class="cyl-cap-front"></div>
+
+                    <!-- Back circular face (touches cube) -->
+                    <div class="cyl-cap-back"></div>
+
+                    <!-- Side walls (short cylinder body) -->
+                    <div class="cyl-cap-side" style="--a: 0deg;"></div>
+                    <div class="cyl-cap-side" style="--a: 15deg;"></div>
+                    <!-- ... repeat for all 24 angles like your existing strips ... -->
+                </div>
+                <div class="cyl-strip" style="--a: 0deg;"></div>
+                <div class="cyl-strip" style="--a: 15deg;"></div>
+                <div class="cyl-strip" style="--a: 30deg;"></div>
+                <div class="cyl-strip" style="--a: 45deg;"></div>
+                <div class="cyl-strip" style="--a: 60deg;"></div>
+                <div class="cyl-strip" style="--a: 75deg;"></div>
+                <div class="cyl-strip" style="--a: 90deg;"></div>
+                <div class="cyl-strip" style="--a: 105deg;"></div>
+                <div class="cyl-strip" style="--a: 120deg;"></div>
+                <div class="cyl-strip" style="--a: 135deg;"></div>
+                <div class="cyl-strip" style="--a: 150deg;"></div>
+                <div class="cyl-strip" style="--a: 165deg;"></div>
+                <div class="cyl-strip" style="--a: 180deg;"></div>
+                <div class="cyl-strip" style="--a: 195deg;"></div>
+                <div class="cyl-strip" style="--a: 210deg;"></div>
+                <div class="cyl-strip" style="--a: 225deg;"></div>
+                <div class="cyl-strip" style="--a: 240deg;"></div>
+                <div class="cyl-strip" style="--a: 255deg;"></div>
+                <div class="cyl-strip" style="--a: 270deg;"></div>
+                <div class="cyl-strip" style="--a: 285deg;"></div>
+                <div class="cyl-strip" style="--a: 300deg;"></div>
+                <div class="cyl-strip" style="--a: 315deg;"></div>
+                <div class="cyl-strip" style="--a: 330deg;"></div>
+                <div class="cyl-strip" style="--a: 345deg;"></div>
+            </div>
+
+            <div class="part" id="panel">
+                <div class="pan-face pan-front"></div>
+                <div class="pan-face pan-back"></div>
+                <div class="pan-face pan-left"></div>
+                <div class="pan-face pan-right"></div>
+                <div class="pan-face pan-top"></div>
+                <div class="pan-face pan-bottom"></div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+
+</html>

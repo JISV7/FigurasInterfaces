@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualización 3D - Figura Geométrica</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #f0f0f0; font-family: sans-serif; }
+        #canvas-container { width: 100vw; height: 100vh; }
+        .ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        .controls-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            pointer-events: auto;
+            max-width: 250px;
+        }
+        button {
+            transition: all 0.2s;
+        }
+        button:active { transform: scale(0.95); }
+    </style>
+</head>
+<body>
+
+    <div class="ui-overlay">
+        <div class="controls-card">
+            <h1 class="text-lg font-bold mb-2 text-gray-800">Visualizador Geométrico</h1>
+            <p class="text-sm text-gray-600 mb-4">Usa el mouse para rotar. La figura es hueca con un canal triangular central.</p>
+            
+            <div class="flex flex-col gap-2">
+                <button onclick="setView('superior')" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded font-medium shadow-sm">
+                    Vista Superior
+                </button>
+                <button onclick="setView('inferior')" class="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded font-medium shadow-sm">
+                    Vista Inferior
+                </button>
+                <button onclick="resetView()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded font-medium">
+                    Perspectiva
+                </button>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-gray-200">
+                <label class="text-xs font-bold text-gray-500 uppercase">Opciones</label>
+                <div class="flex items-center mt-2">
+                    <input type="checkbox" id="wireframeToggle" onchange="toggleWireframe(this)" class="mr-2">
+                    <span class="text-sm text-gray-700">Ver Estructura (Wireframe)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <script>
+        let scene, camera, renderer, controls, mainObject;
+        let materials = [];
+
+        function init() {
+            // Escena y Cámara
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf8fafc);
+            
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(5, 5, 5);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            // Controles
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+
+            // Luces
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 20, 10);
+            scene.add(directionalLight);
+
+            const pointLight = new THREE.PointLight(0x3b82f6, 0.5);
+            pointLight.position.set(-10, -10, -10);
+            scene.add(pointLight);
+
+            // Crear el objeto complejo (Prisma + Embudo + Hueco Triangular)
+            createComplexGeometry();
+
+            window.addEventListener('resize', onWindowResize, false);
+            animate();
+        }
+
+        function createComplexGeometry() {
+            mainObject = new THREE.Group();
+
+            const mat = new THREE.MeshPhongMaterial({
+                color: 0x4f46e5,
+                side: THREE.DoubleSide,
+                flatShading: true,
+                transparent: true,
+                opacity: 0.9
+            });
+            materials.push(mat);
+
+            // Parámetros
+            const hBase = 2;       // Altura del cubo inferior
+            const hTop = 1.2;      // Altura del embudo superior
+            const wBase = 1.5;     // Ancho del cubo
+            const wTop = 2.5;      // Ancho superior del embudo
+            const triSize = 0.5;   // Tamaño del hueco triangular
+
+            // 1. Paredes Exteriores del Cubo Inferior (4 paneles)
+            const boxGeo = new THREE.Group();
+            const walls = [
+                { p: [wBase/2, 0, 0], r: [0, Math.PI/2, 0], s: [wBase, hBase] },
+                { p: [-wBase/2, 0, 0], r: [0, -Math.PI/2, 0], s: [wBase, hBase] },
+                { p: [0, 0, wBase/2], r: [0, 0, 0], s: [wBase, hBase] },
+                { p: [0, 0, -wBase/2], r: [0, Math.PI, 0], s: [wBase, hBase] }
+            ];
+            
+            walls.forEach(w => {
+                const pGeo = new THREE.PlaneGeometry(w.s[0], w.s[1]);
+                const mesh = new THREE.Mesh(pGeo, mat);
+                mesh.position.set(...w.p);
+                mesh.rotation.set(...w.r);
+                boxGeo.add(mesh);
+            });
+            boxGeo.position.y = -hBase/2;
+            mainObject.add(boxGeo);
+
+            // 2. Embudo Superior (Pirámide Truncada Hueca)
+            // Creamos 4 trapecios manualmente
+            const funnelGeo = new THREE.Group();
+            const createTrapezoid = (isFront) => {
+                const geo = new THREE.BufferGeometry();
+                const vertices = new Float32Array([
+                    -wBase/2, 0, 0,   wBase/2, 0, 0,   wTop/2, hTop, (wTop-wBase)/2,
+                    -wBase/2, 0, 0,   wTop/2, hTop, (wTop-wBase)/2,  -wTop/2, hTop, (wTop-wBase)/2
+                ]);
+                geo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+                geo.computeVertexNormals();
+                return new THREE.Mesh(geo, mat);
+            };
+
+            for(let i=0; i<4; i++) {
+                const t = createTrapezoid();
+                t.rotation.y = (Math.PI/2) * i;
+                // Ajuste de posición para que encaje con el borde del cubo
+                const dist = wBase/2;
+                t.position.set(0, 0, dist);
+                // El trapecio debe inclinarse
+                // Cálculo simple de ángulo para que las esquinas coincidan
+                // Usaremos una geometría de cara personalizada para mayor precisión
+                funnelGeo.add(t);
+            }
+
+            // Refinamiento del Embudo con geometría de caras personalizada
+            const customFunnel = new THREE.Group();
+            const ptsBase = [
+                new THREE.Vector3(-wBase/2, 0, wBase/2),
+                new THREE.Vector3(wBase/2, 0, wBase/2),
+                new THREE.Vector3(wBase/2, 0, -wBase/2),
+                new THREE.Vector3(-wBase/2, 0, -wBase/2)
+            ];
+            const ptsTop = [
+                new THREE.Vector3(-wTop/2, hTop, wTop/2),
+                new THREE.Vector3(wTop/2, hTop, wTop/2),
+                new THREE.Vector3(wTop/2, hTop, -wTop/2),
+                new THREE.Vector3(-wTop/2, hTop, -wTop/2)
+            ];
+
+            for(let i=0; i<4; i++) {
+                const next = (i+1)%4;
+                const fGeo = new THREE.BufferGeometry();
+                const v = new Float32Array([
+                    ptsBase[i].x, ptsBase[i].y, ptsBase[i].z,
+                    ptsBase[next].x, ptsBase[next].y, ptsBase[next].z,
+                    ptsTop[next].x, ptsTop[next].y, ptsTop[next].z,
+
+                    ptsBase[i].x, ptsBase[i].y, ptsBase[i].z,
+                    ptsTop[next].x, ptsTop[next].y, ptsTop[next].z,
+                    ptsTop[i].x, ptsTop[i].y, ptsTop[i].z
+                ]);
+                fGeo.setAttribute('position', new THREE.BufferAttribute(v, 3));
+                fGeo.computeVertexNormals();
+                customFunnel.add(new THREE.Mesh(fGeo, mat));
+            }
+            mainObject.add(customFunnel);
+
+            // 3. El Canal Triangular Interior (Extrusión de un triángulo)
+            const triangleShape = new THREE.Shape();
+            const r = triSize;
+            triangleShape.moveTo(0, r);
+            triangleShape.lineTo(r * Math.cos(Math.PI/6), -r * Math.sin(Math.PI/6));
+            triangleShape.lineTo(-r * Math.cos(Math.PI/6), -r * Math.sin(Math.PI/6));
+            triangleShape.lineTo(0, r);
+
+            const extrudeSettings = { depth: hBase + hTop, bevelEnabled: false };
+            const triGeo = new THREE.ExtrudeGeometry(triangleShape, extrudeSettings);
+            const triMat = new THREE.MeshPhongMaterial({ color: 0x1e293b, side: THREE.BackSide }); // Color oscuro para el interior
+            const triMesh = new THREE.Mesh(triGeo, triMat);
+            
+            triMesh.rotation.x = Math.PI/2;
+            triMesh.position.y = hTop;
+            mainObject.add(triMesh);
+
+            // Tapas superior e inferior (con el hueco triangular restado)
+            // Para simplicidad visual, usaremos planos con huecos
+            const createFaceWithHole = (size, isTop) => {
+                const shape = new THREE.Shape();
+                shape.moveTo(-size/2, -size/2);
+                shape.lineTo(size/2, -size/2);
+                shape.lineTo(size/2, size/2);
+                shape.lineTo(-size/2, size/2);
+                shape.lineTo(-size/2, -size/2);
+
+                const hole = new THREE.Path();
+                hole.moveTo(0, r);
+                hole.lineTo(-r * Math.cos(Math.PI/6), -r * Math.sin(Math.PI/6));
+                hole.lineTo(r * Math.cos(Math.PI/6), -r * Math.sin(Math.PI/6));
+                hole.lineTo(0, r);
+                shape.holes.push(hole);
+
+                const geo = new THREE.ShapeGeometry(shape);
+                const m = new THREE.Mesh(geo, mat);
+                m.rotation.x = -Math.PI/2;
+                m.position.y = isTop ? hTop : -hBase;
+                return m;
+            };
+
+            mainObject.add(createFaceWithHole(wTop, true));
+            mainObject.add(createFaceWithHole(wBase, false));
+
+            scene.add(mainObject);
+        }
+
+        function setView(type) {
+            if (type === 'superior') {
+                camera.position.set(0, 6, 0.1);
+            } else if (type === 'inferior') {
+                camera.position.set(0, -6, 0.1);
+            }
+            controls.update();
+        }
+
+        function resetView() {
+            camera.position.set(5, 5, 5);
+            controls.update();
+        }
+
+        function toggleWireframe(el) {
+            materials.forEach(m => m.wireframe = el.checked);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
