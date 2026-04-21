@@ -1,0 +1,9 @@
+Necesito que crees esta figura en 3D. Usando unicamente HTML y CSS en un mismo archivo.
+Sigue el ejemplo, del archivo "piramide.html"
+Necesito que crees la figura apreciable en la imagen, necesito que la figura este quieta en el centro del plano y que sea la camara la que gira.
+Necesito que todas las piezas estén creadas por separado como objetos idependientes y que las identifiques correctamente con comentarios.
+
+I need you to create this 3D model using only HTML and CSS in a single file.
+Follow the example in the “piramide.html” file.
+I need you to create the model shown in the image; the model should remain stationary in the center of the plane, and the camera should rotate around it.
+I need all the parts to be created separately as independent objects and for you to identify them correctly with comments.
