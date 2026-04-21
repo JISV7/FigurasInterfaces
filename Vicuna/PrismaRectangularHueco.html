@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prisma Rectangular Hueco</title>
+</head>
+
+<style>
+    body{
+        background-color: black;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin:0;
+        padding: 0;
+    }
+
+    .prisma {
+        transform-style: preserve-3d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: girar 20s ease-in-out alternate infinite;
+    }
+
+    .cuadrado{
+        width: 100px;
+        height: 100px;
+        border: 50px solid rgb(84, 169, 218);
+        background-color: transparent;
+        position: absolute;
+
+    }
+
+    .cuadrado_1{
+        transform: translateZ(250px);
+    }
+
+    .cuadrado_2{
+        transform: translateZ(-250px);
+    }
+
+
+    .rectangulo{
+        width: 500px;
+        height: 200px;
+        position: absolute;
+    }
+
+    .rectangulo_1 {
+        background-color: brown;
+        transform: rotateY(90deg) translateZ(100px);
+    }
+    .rectangulo_2 {
+        background-color: fuchsia;
+        transform: rotateY(90deg) rotateX(90deg) translateZ(100px);
+    }
+
+    .rectangulo_3{
+        background-color: pink;
+        transform: rotateY(90deg) rotateX(180deg) translateZ(100px);
+    }
+    .rectangulo_4{
+        background-color: yellowgreen;
+        transform: rotateY(90deg) rotateX(270deg) translateZ(100px);
+    }
+
+    .rectangulo_hueco_1 {
+        background-color: brown;
+        transform: rotateY(90deg) translateZ(100px);
+    }
+    .rectangulo_hueco_2 {
+        background-color: fuchsia;
+        transform: rotateY(90deg) rotateX(90deg) translateZ(100px);
+    }
+
+    .rectangulo_hueco_3{
+        background-color: pink;
+        transform: rotateY(90deg) rotateX(180deg) translateZ(100px);
+    }
+    .rectangulo_hueco_4{
+        background-color: yellowgreen;
+        transform: rotateY(90deg) rotateX(270deg) translateZ(100px);
+    }
+
+    @keyframes girar {
+    0% {
+        transform: none;
+    }
+
+    25% {
+        transform: rotateX(-360deg);
+    } 
+    50% {transform: rotateY(360deg);}
+
+    100% {
+        transform: none;
+    }
+    }
+
+
+</style>
+<body>
+
+    <div class="prisma">
+        <div class="cuadrado cuadrado_1"></div>
+        <div class="cuadrado cuadrado_2"></div>
+        <div class="rectangulo rectangulo_1"></div>
+        <div class="rectangulo rectangulo_2"></div>
+        <div class="rectangulo rectangulo_3"></div>
+        <div class="rectangulo rectangulo_4"></div>
+    </div>
+    
+</body>
+</html>

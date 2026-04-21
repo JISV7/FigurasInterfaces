@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Figura Compuesta 3D</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f0f0f0;
+            perspective: 1200px;
+        }
+
+        .scene {
+            width: 200px;
+            height: 200px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: rotateObj 10s linear infinite;
+        }
+
+        @keyframes rotateObj {
+            from { transform: rotateX(-20deg) rotateY(0deg); }
+            to { transform: rotateX(-20deg) rotateY(360deg); }
+        }
+
+        .assembly {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-style: preserve-3d;
+        }
+
+        /* --- Estilos Generales --- */
+        .face {
+            position: absolute;
+            background: white;
+            border: 2px solid black;
+            box-sizing: border-box;
+            opacity: 0.9;
+        }
+
+        .striped {
+            background-image: repeating-linear-gradient(
+                90deg,
+                transparent 0px,
+                transparent 4px,
+                #000 4px,
+                #000 5px
+            );
+        }
+        .striped-v {
+            background-image: repeating-linear-gradient(
+                0deg,
+                transparent 0px,
+                transparent 4px,
+                #000 4px,
+                #000 5px
+            );
+        }
+
+        /* --- Cubo Central (100x100x100) --- */
+        .cube-center {
+            position: absolute;
+            transform-style: preserve-3d;
+        }
+        .cube-center .face {
+            width: 100px;
+            height: 100px;
+            margin: -50px;
+        }
+        .cube-center .f-front  { transform: translateZ(50px); }
+        .cube-center .f-back   { transform: rotateY(180deg) translateZ(50px); }
+        .cube-center .f-right  { transform: rotateY(90deg) translateZ(50px); }
+        .cube-center .f-left   { transform: rotateY(-90deg) translateZ(50px); }
+        .cube-center .f-top    { transform: rotateX(90deg) translateZ(50px); }
+        .cube-center .f-bottom { transform: rotateX(-90deg) translateZ(50px); }
+
+        /* --- Cubo Pequeño Abajo (60x60x60) --- */
+        .cube-bottom {
+            position: absolute;
+            transform-style: preserve-3d;
+            transform: translateY(80px); /* 50 (mitad central) + 30 (mitad pequeño) */
+        }
+        .cube-bottom .face {
+            width: 60px;
+            height: 60px;
+            margin: -30px;
+        }
+        .cube-bottom .f-front  { transform: translateZ(30px); }
+        .cube-bottom .f-back   { transform: rotateY(180deg) translateZ(30px); }
+        .cube-bottom .f-right  { transform: rotateY(90deg) translateZ(30px); }
+        .cube-bottom .f-left   { transform: rotateY(-90deg) translateZ(30px); }
+        .cube-bottom .f-bottom { transform: rotateX(-90deg) translateZ(30px); }
+        /* Top face conecta con el cubo central, no es necesaria */
+
+        /* --- Prisma Izquierdo (Tubo) --- */
+        /* Dimensiones: 50x50 sección, 100 largo */
+        .prism-left {
+            position: absolute;
+            transform-style: preserve-3d;
+            transform: translateX(-100px); /* -50 (borde central) - 50 (mitad largo) */
+        }
+        .prism-left .face {
+            position: absolute;
+            border: 2px solid black;
+            background: white;
+        }
+        /* Caras largas (100x50) */
+        .prism-left .long {
+            width: 100px;
+            height: 50px;
+            margin-left: -50px;
+            margin-top: -25px;
+        }
+        .prism-left .f-front  { transform: translateZ(25px); }
+        .prism-left .f-back   { transform: rotateY(180deg) translateZ(25px); }
+        .prism-left .f-top    { transform: rotateX(90deg) translateZ(25px); }
+        .prism-left .f-bottom { transform: rotateX(-90deg) translateZ(25px); }
+        
+        /* Tapa final (izquierda) con agujero simulado (borde grueso) */
+        .prism-left .cap {
+            width: 50px;
+            height: 50px;
+            margin: -25px;
+            transform: rotateY(-90deg) translateZ(50px);
+            background: transparent;
+            border: 8px solid black; /* Borde grueso para simular grosor */
+        }
+
+        /* --- Pirámide Frente (Front) --- */
+        .pyramid-front {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            top: -100px;
+            left: -100px;
+            transform-style: preserve-3d;
+            
+            /* 
+               Posición: Cara Frontal (Z=50).
+               Escala: 0.4 en X/Z (ancho/profundidad), 0.7 en Y (altura).
+               Rotación: rotateX(-90deg) para apuntar hacia afuera (+Z).
+               
+               Cálculo Z:
+               - Base interna en Y = 73px.
+               - Escala Y = 0.7.
+               - Distancia base escalada = 73 * 0.7 = 51.1px.
+               - Al rotar -90deg en X, +Y se convierte en -Z.
+               - La base está en (Z_container - 51.1).
+               - Queremos que la base esté en Z = 50.
+               - Z_container - 51.1 = 50  =>  Z_container = 101.1px.
+            */
+            transform: translateZ(101.1px) rotateX(-90deg) scale3d(0.4, 0.7, 0.4);
+        }
+
+        .pyramid-front .side {
+            width: 0;
+            height: 0;
+            position: absolute;
+            opacity: 0.9;
+            border: 100px solid transparent;
+            border-bottom: 200px solid red;
+            border-top: 0px;
+        }
+
+        .pyramid-front .base {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform: translateY(73px) rotateX(90deg);
+            border: 0;
+            background: blue;
+        }
+
+        .pyramid-front .one {
+            transform: rotateX(30deg);
+            transform-origin: 0 0;
+            border-bottom-color: #e74c3c;
+        }
+
+        .pyramid-front .two {
+            transform-origin: 100px 0;
+            transform: rotateY(90deg) rotateX(-30deg);
+            border-bottom-color: #8e44ad;
+        }
+
+        .pyramid-front .three {
+            transform-origin: 100px 0;
+            transform: rotateY(270deg) rotateX(-30deg);
+            border-bottom-color: #ff69b4;
+        }
+
+        .pyramid-front .four {
+            transform-origin: 100px 0;
+            transform: rotateY(0) rotateX(-30deg);
+            border-bottom-color: #f1c40f;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="scene">
+        <div class="assembly">
+            
+            <!-- Cubo Central -->
+            <div class="cube-center">
+                <div class="face f-front"></div>
+                <div class="face f-back"></div>
+                <div class="face f-right"></div>
+                <div class="face f-left"></div>
+                <div class="face f-top"></div>
+                <div class="face f-bottom"></div>
+            </div>
+
+            <!-- Cubo Abajo -->
+            <div class="cube-bottom">
+                <div class="face f-front"></div>
+                <div class="face f-back"></div>
+                <div class="face f-right"></div>
+                <div class="face f-left"></div>
+                <div class="face f-bottom"></div>
+            </div>
+
+            <!-- Prisma Izquierda -->
+            <div class="prism-left">
+                <div class="face long f-front"></div>
+                <div class="face long f-back"></div>
+                <div class="face long f-top"></div>
+                <div class="face long f-bottom"></div>
+                <div class="face cap"></div>
+            </div>
+
+            <!-- Pirámide Frente -->
+            <div class="pyramid-front">
+                <div class="base"></div>
+                <div class="side one"></div>
+                <div class="side two"></div>
+                <div class="side three"></div>
+                <div class="side four"></div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

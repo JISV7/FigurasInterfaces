@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Figura Compuesta 3D</title>
+    <style>
+      body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #f0f0f0;
+        perspective: 1200px;
+      }
+
+      .scene {
+        width: 200px;
+        height: 200px;
+        position: relative;
+        transform-style: preserve-3d;
+        animation: rotateObj 10s linear infinite;
+      }
+
+      @keyframes rotateObj {
+        from {
+          transform: rotateX(-20deg) rotateY(0deg);
+        }
+        to {
+          transform: rotateX(-20deg) rotateY(360deg);
+        }
+      }
+
+      .assembly {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform-style: preserve-3d;
+      }
+
+      /* --- Estilos Generales --- */
+      .face {
+        position: absolute;
+        background: white;
+        border: 2px solid black;
+        box-sizing: border-box;
+        opacity: 0.9;
+      }
+
+      .striped {
+        background-image: repeating-linear-gradient(
+          90deg,
+          transparent 0px,
+          transparent 4px,
+          #000 4px,
+          #000 5px
+        );
+      }
+      .striped-v {
+        background-image: repeating-linear-gradient(
+          0deg,
+          transparent 0px,
+          transparent 4px,
+          #000 4px,
+          #000 5px
+        );
+      }
+
+      /* --- Cubo Central (100x100x100) --- */
+      .cube-center {
+        position: absolute;
+        transform-style: preserve-3d;
+      }
+      .cube-center .face {
+        width: 100px;
+        height: 100px;
+        margin: -50px;
+      }
+      .cube-center .f-front {
+        transform: translateZ(50px);
+      }
+      .cube-center .f-back {
+        transform: rotateY(180deg) translateZ(50px);
+      }
+      .cube-center .f-right {
+        transform: rotateY(90deg) translateZ(50px);
+      }
+      .cube-center .f-left {
+        transform: rotateY(-90deg) translateZ(50px);
+      }
+      .cube-center .f-top {
+        transform: rotateX(90deg) translateZ(50px);
+      }
+      .cube-center .f-bottom {
+        transform: rotateX(-90deg) translateZ(50px);
+      }
+
+      /* --- Cubo Pequeño Abajo (60x60x30) --- */
+      .cube-bottom {
+        position: absolute;
+        transform-style: preserve-3d;
+        transform: translateY(
+          65px
+        ); /* 50 (mitad central) + 15 (mitad altura) */
+      }
+      .cube-bottom .face {
+        position: absolute;
+        border: 2px solid black;
+        background: white;
+      }
+      /* Caras laterales (Front, Back, Right, Left): 60x30 */
+      .cube-bottom .f-front,
+      .cube-bottom .f-back,
+      .cube-bottom .f-right,
+      .cube-bottom .f-left {
+        width: 60px;
+        height: 30px;
+        margin-left: -30px;
+        margin-top: -15px;
+      }
+      .cube-bottom .f-front {
+        transform: translateZ(30px);
+      }
+      .cube-bottom .f-back {
+        transform: rotateY(180deg) translateZ(30px);
+      }
+      .cube-bottom .f-right {
+        transform: rotateY(90deg) translateZ(30px);
+      }
+      .cube-bottom .f-left {
+        transform: rotateY(-90deg) translateZ(30px);
+      }
+
+      /* Cara inferior: 60x60 */
+      .cube-bottom .f-bottom {
+        width: 60px;
+        height: 60px;
+        margin-left: -30px;
+        margin-top: -30px;
+        transform: rotateX(-90deg) translateZ(15px);
+      }
+      /* Top face conecta con el cubo central, no es necesaria */
+
+      /* --- Extension Izquierda (Left Extension) --- */
+      .cube-extension {
+        position: absolute;
+        transform-style: preserve-3d;
+        transform: translateX(
+          -75px
+        ); /* -50 (borde central) - 25 (mitad extension) */
+      }
+      /* Base size for front/back faces (50x100) */
+      .cube-extension .face {
+        position: absolute;
+        border: 2px solid black;
+        background: white;
+      }
+
+      /* Front/Back: 50 wide, 100 high */
+      .cube-extension .f-front,
+      .cube-extension .f-back {
+        width: 50px;
+        height: 100px;
+        margin-left: -25px;
+        margin-top: -50px;
+      }
+      .cube-extension .f-front {
+        transform: translateZ(50px);
+      }
+      .cube-extension .f-back {
+        transform: rotateY(180deg) translateZ(50px);
+      }
+
+      /* Top/Bottom: 50 wide, 100 deep */
+      .cube-extension .f-top,
+      .cube-extension .f-bottom {
+        width: 50px;
+        height: 100px;
+        margin-left: -25px;
+        margin-top: -50px;
+      }
+      .cube-extension .f-top {
+        transform: rotateX(90deg) translateZ(50px);
+      }
+      .cube-extension .f-bottom {
+        transform: rotateX(-90deg) translateZ(50px);
+      }
+
+      /* Right (facing center): 100x100 */
+      .cube-extension .f-right {
+        width: 100px;
+        height: 100px;
+        margin: -50px;
+        transform: rotateY(90deg) translateZ(25px);
+        background: black;
+      }
+
+      /* Left (facing prism): 100x100 with hole */
+      .cube-extension .f-left-group {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        margin: -50px;
+        transform: rotateY(-90deg) translateZ(25px);
+        transform-style: preserve-3d;
+      }
+      .cube-extension .part {
+        position: absolute;
+        background: white;
+        border: 2px solid black;
+        box-sizing: border-box;
+      }
+      .cube-extension .p-top {
+        width: 100px;
+        height: 15px;
+        top: 0;
+        left: 0;
+      }
+      .cube-extension .p-bottom {
+        width: 100px;
+        height: 15px;
+        bottom: 0;
+        left: 0;
+      }
+      .cube-extension .p-left {
+        width: 15px;
+        height: 70px;
+        top: 15px;
+        left: 0;
+        border-top: none;
+        border-bottom: none;
+      }
+      .cube-extension .p-right {
+        width: 15px;
+        height: 70px;
+        top: 15px;
+        right: 0;
+        border-top: none;
+        border-bottom: none;
+      }
+
+      /* --- Prisma Izquierdo (Tubo) --- */
+      /* Dimensiones: 50x50 sección, 100 largo */
+      .prism-left {
+        position: absolute;
+        transform-style: preserve-3d;
+        transform: translateX(
+          -100px
+        ); /* -50 (borde central) - 50 (mitad largo) -> Sale desde el cubo central */
+      }
+      .prism-left .face {
+        position: absolute;
+        border: 2px solid black;
+        background: white;
+      }
+      /* Caras largas (100x50) */
+      .prism-left .long {
+        width: 100px;
+        height: 50px;
+        margin-left: -50px;
+        margin-top: -25px;
+      }
+      .prism-left .f-front {
+        transform: translateZ(25px);
+      }
+      .prism-left .f-back {
+        transform: rotateY(180deg) translateZ(25px);
+      }
+      .prism-left .f-top {
+        transform: rotateX(90deg) translateZ(25px);
+      }
+      .prism-left .f-bottom {
+        transform: rotateX(-90deg) translateZ(25px);
+      }
+
+      /* Tapa final (izquierda) con agujero simulado (borde grueso) */
+      .prism-left .cap {
+        width: 50px;
+        height: 50px;
+        margin: -25px;
+        transform: rotateY(-90deg) translateZ(50px);
+        background: transparent;
+        border: 8px solid black; /* Borde grueso para simular grosor */
+      }
+
+      /* --- Pirámide Frente (Front) --- */
+      .pyramid-front {
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        top: -100px;
+        left: -100px;
+        transform-style: preserve-3d;
+
+        /* 
+               Posición: Cara Frontal (Z=50).
+               Escala: 0.4.
+               Rotación: rotateX(-90deg) para apuntar hacia afuera (+Z).
+               Cálculo Z: 50 (cara) + 29.2 (offset base) = 79.2px.
+            */
+        transform: translateZ(79.2px) rotateX(-90deg) scale3d(0.4, 0.4, 0.4);
+      }
+
+      .pyramid-front .side {
+        width: 0;
+        height: 0;
+        position: absolute;
+        opacity: 0.9;
+        border: 100px solid transparent;
+        border-bottom: 200px solid red;
+        border-top: 0px;
+      }
+
+      .pyramid-front .base {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        transform: translateY(73px) rotateX(90deg);
+        border: 0;
+        background: blue;
+      }
+
+      .pyramid-front .one {
+        transform: rotateX(30deg);
+        transform-origin: 0 0;
+        border-bottom-color: #e74c3c;
+      }
+
+      .pyramid-front .two {
+        transform-origin: 100px 0;
+        transform: rotateY(90deg) rotateX(-30deg);
+        border-bottom-color: #8e44ad;
+      }
+
+      .pyramid-front .three {
+        transform-origin: 100px 0;
+        transform: rotateY(270deg) rotateX(-30deg);
+        border-bottom-color: #ff69b4;
+      }
+
+      .pyramid-front .four {
+        transform-origin: 100px 0;
+        transform: rotateY(0) rotateX(-30deg);
+        border-bottom-color: #f1c40f;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="scene">
+      <div class="assembly">
+        <!-- Cubo Central -->
+        <div class="cube-center">
+          <div class="face f-front"></div>
+          <div class="face f-back"></div>
+          <div class="face f-right"></div>
+          <div class="face f-left"></div>
+          <div class="face f-top"></div>
+          <div class="face f-bottom"></div>
+        </div>
+
+        <!-- Cubo Abajo -->
+        <div class="cube-bottom">
+          <div class="face f-front striped-v"></div>
+          <div class="face f-back striped-v"></div>
+          <div class="face f-right striped-v"></div>
+          <div class="face f-left striped-v"></div>
+          <div class="face f-bottom"></div>
+        </div>
+
+        <!-- Extension Izquierda -->
+        <div class="cube-extension">
+          <div class="face f-front striped-v"></div>
+          <div class="face f-back striped-v"></div>
+          <div class="face f-top striped-v"></div>
+          <div class="face f-bottom striped-v"></div>
+          <div class="face f-right"></div>
+          <div class="f-left-group">
+            <div class="part p-top striped-v"></div>
+            <div class="part p-bottom striped-v"></div>
+            <div class="part p-left striped-v"></div>
+            <div class="part p-right striped-v"></div>
+          </div>
+        </div>
+
+        <!-- Prisma Izquierda -->
+        <div class="prism-left">
+          <div class="face long f-front striped-v"></div>
+          <div class="face long f-back striped-v"></div>
+          <div class="face long f-top striped-v"></div>
+          <div class="face long f-bottom striped-v"></div>
+          <div class="face cap"></div>
+        </div>
+
+        <!-- Pirámide Frente -->
+        <div class="pyramid-front">
+          <div class="base"></div>
+          <div class="side one"></div>
+          <div class="side two"></div>
+          <div class="side three"></div>
+          <div class="side four"></div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

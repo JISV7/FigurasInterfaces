@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>prisma</title>
+</head>
+
+<style>
+    body{
+        background-color: black;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin:0;
+        padding: 0;
+    }
+
+    .prisma {
+        transform-style: preserve-3d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: girar 20s ease-in-out alternate infinite;
+    }
+
+    .triangulo{
+        height: 0;
+        width: 0;
+        position: absolute;
+        border-left: 50px solid transparent;
+        border-right: 50px solid transparent;
+        border-bottom: 100px solid aquamarine;
+    }
+
+    .triangulo_1{
+        transform: translateZ(150px);
+    }
+
+    .triangulo_2{
+        transform: translateZ(-150px);
+    }
+
+    .rectangulo{
+        height: 100px;
+        width: 300px;
+        position: absolute;
+    }
+
+    .rectangulo_1{
+        background-color: brown;
+        transform:rotateY(90deg) translateY(50px) rotateX(90deg);
+    }
+
+    .rectangulo_2{
+        background-color: fuchsia;
+        height: 110px;
+        transform:rotateY(90deg)  translateZ(-25px) rotateX(153deg);
+    }
+    .rectangulo_3{
+        background-color: blue;
+        height: 110px;
+        transform:rotateY(90deg)  translateZ(25px) rotateX(27deg);
+    }
+
+    @keyframes girar {
+    0% {
+        transform: none;
+    }
+
+    25% {
+        transform: rotateX(-360deg);
+    } 
+    50% {transform: rotateY(360deg);}
+
+    100% {
+        transform: none;
+    }
+}
+
+
+
+</style>
+<body>
+
+    <div class="prisma">
+        <div class="triangulo triangulo_1"></div>
+        <div class="triangulo triangulo_2"></div>
+        <div class="rectangulo rectangulo_1"></div>
+        <div class="rectangulo rectangulo_2"></div>
+        <div class="rectangulo rectangulo_3"></div>
+    </div>
+
+
+    
+</body>
+</html>
