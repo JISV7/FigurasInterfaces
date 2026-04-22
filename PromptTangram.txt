@@ -1,0 +1,5 @@
+I need you to create this tangram as a 3D model using only HTML and CSS in a single file.
+Follow the example in the pictures files I need the 7 pieces to have different colors.
+I need you to create the model shown in the image; the model should remain stationary in the center of the page, and the camera fixed in a upper view.
+The starting figure is a perfect square using the 7 pieces, then animate them to reorganize to form the figure depicted in the uploaded pictures.
+I need you to create all the parts separately as independent objects and to identify them correctly with comments.
