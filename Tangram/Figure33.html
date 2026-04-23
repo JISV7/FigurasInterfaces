@@ -31,6 +31,7 @@
             position: relative;
             transform-style: preserve-3d;
             /* transform: rotateX(50deg) rotateZ(-25deg); */
+            transform: translateZ(-900px);
             /* Shift slightly to ensure the final figure stays centered */
             margin-left: -50px;
             margin-top: -50px;
@@ -189,7 +190,7 @@
             50% {}
 
             100% {
-                transform: translate3d(67px, 0px, 0) rotate(180deg);
+                transform: translate3d(67px, -400px, 0) rotate(180deg);
                 filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5)) drop-shadow(4px 4px 8px rgba(0, 0, 0, 0.2));
             }
         }
