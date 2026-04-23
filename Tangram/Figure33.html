@@ -38,7 +38,8 @@
 
         /* * INDEPENDENT PIECES
          * Each piece is a full-sized absolute div, cut down to shape using clip-path.
-         * The center of rotation (transform-origin) is exactly in the center of the board.
+         * Transform-origin is now set per-piece to match its geometric center.
+         * This decouples rotation from translation: rotate() spins in place, translate() moves the center.
          */
         .piece {
             position: absolute;
@@ -46,12 +47,11 @@
             left: 0;
             width: 100%;
             height: 100%;
-            transform-origin: 200px 200px;
             /* Initial state locked to perfect alignment */
             transform: translate3d(0, 0, 0) rotate(0deg);
             filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5)) drop-shadow(4px 4px 8px rgba(0, 0, 0, 0.2));
             animation-duration: 2.5s;
-            animation-delay: 3s;
+            animation-delay: 0s;
             animation-timing-function: ease-in-out;
             animation-fill-mode: forwards;
         }
@@ -61,6 +61,7 @@
             clip-path: polygon(0 0, 0 100%, 50% 50%);
             background-color: #00cc7c;
             /* Green */
+            transform-origin: 66.67px 200px;
             animation-name: morph-l1;
         }
 
@@ -73,7 +74,7 @@
             50% {}
 
             100% {
-                transform: translate3d(0px, 0px, 0) rotate(180deg);
+                transform: translate3d(267px, 0px, 0) rotate(180deg);
                 filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5)) drop-shadow(4px 4px 8px rgba(0, 0, 0, 0.2));
             }
         }
@@ -83,6 +84,7 @@
             clip-path: polygon(0 100%, 100% 100%, 50% 50%);
             background-color: #2583ef;
             /* Blue */
+            transform-origin: 200px 333.33px;
             animation-name: morph-l2;
         }
 
@@ -105,6 +107,7 @@
             clip-path: polygon(0 0, 50% 0, 25% 25%);
             background-color: #ec4654;
             /* Red */
+            transform-origin: 100px 33.33px;
             animation-name: morph-s1;
         }
 
@@ -117,7 +120,7 @@
             50% {}
 
             100% {
-                transform: translate3d(341.42px, 291.42px, 0) rotate(90deg);
+                transform: translate3d(0px, 133px, 0) rotate(180deg);
                 filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5)) drop-shadow(4px 4px 8px rgba(0, 0, 0, 0.2));
             }
         }
@@ -127,6 +130,7 @@
             clip-path: polygon(50% 0, 75% 25%, 50% 50%, 25% 25%);
             background-color: #fad405;
             /* Yellow */
+            transform-origin: 200px 100px;
             animation-name: morph-sq;
         }
 
@@ -149,6 +153,7 @@
             clip-path: polygon(50% 0, 100% 0, 100% 50%);
             background-color: #ad43df;
             /* Purple */
+            transform-origin: 333.33px 66.67px;
             animation-name: morph-m;
         }
 
@@ -161,7 +166,7 @@
             50% {}
 
             100% {
-                transform: translate3d(0px, 0px, 0) rotate(-90deg);
+                transform: translate3d(-266.5px, 200px, 0) rotate(-90deg);
                 filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5)) drop-shadow(4px 4px 8px rgba(0, 0, 0, 0.2));
             }
         }
@@ -171,6 +176,7 @@
             clip-path: polygon(50% 50%, 75% 25%, 75% 75%);
             background-color: #0fc8e6;
             /* Cyan */
+            transform-origin: 266.67px 200px;
             animation-name: morph-s2;
         }
 
@@ -183,7 +189,7 @@
             50% {}
 
             100% {
-                transform: translate3d(241.42px, -108.58px, 0) rotate(45deg);
+                transform: translate3d(67px, 0px, 0) rotate(180deg);
                 filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5)) drop-shadow(4px 4px 8px rgba(0, 0, 0, 0.2));
             }
         }
@@ -193,6 +199,7 @@
             clip-path: polygon(75% 25%, 100% 50%, 100% 100%, 75% 75%);
             background-color: #fd8b01;
             /* Orange */
+            transform-origin: 350px 250px;
             animation-name: morph-p;
         }
 
@@ -205,7 +212,7 @@
             50% {}
 
             100% {
-                transform: translate3d(0px, 0px, 0) rotate(0deg);
+                transform: translate3d(0px, -300px, 0) rotateX(180deg);
                 filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5)) drop-shadow(4px 4px 8px rgba(0, 0, 0, 0.2));
             }
         }
