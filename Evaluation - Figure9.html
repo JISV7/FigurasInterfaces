@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Isometric Model</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #ffffff;
+            font-family: sans-serif;
+        }
+
+        #info {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            text-align: center;
+            pointer-events: none;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+
+    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // 1. SCENE & CAMERA SETUP
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xffffff);
+
+        const aspect = window.innerWidth / window.innerHeight;
+        const viewSize = 1.8;
+
+        const camera = new THREE.OrthographicCamera(
+            -viewSize * aspect, viewSize * aspect,
+            viewSize, -viewSize,
+            0.1, 100
+        );
+
+        camera.position.set(10, -10, 10);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // 2. TEXTURE GENERATORS
+        // We generate the line patterns programmatically on canvases
+        // and map them correctly based on their normal vectors
+        function createPatternTexture(type) {
+            const size = 512;
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            // Fill white background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, size, size);
+
+            // Setup line style
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 14;
+            const spacing = 36;
+
+            ctx.beginPath();
+            if (type === 'vertical') {
+                // Vertical lines for the left-facing side
+                for (let i = 0; i <= size; i += spacing) {
+                    ctx.moveTo(i, 0);
+                    ctx.lineTo(i, size);
+                }
+            } else if (type === 'horizontal') {
+                // Diagonal mapping that results in horizontal lines visually on the +Z face
+                for (let i = -size * 2; i <= size * 2; i += spacing * 1.5) {
+                    ctx.moveTo(0, i);
+                    ctx.lineTo(size * 2, i + size);
+                }
+            } else if (type === 'diagonal') {
+                // Diagonal mapping that results in horizontal lines visually on the -Y face
+                for (let i = -size; i <= size * 2; i += spacing * 1.414) {
+                    ctx.moveTo(i, 0);
+                    ctx.lineTo(i + size, size);
+                }
+            }
+            ctx.stroke();
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+            // Ensure crisp edges
+            texture.minFilter = THREE.LinearMipmapLinearFilter;
+            return texture;
+        }
+
+        // Generate the 3 specific textures from the image
+        const texVertical = createPatternTexture('vertical');
+        const texHorizontal = createPatternTexture('horizontal');
+        const texDiagonal = createPatternTexture('diagonal');
+
+        // 3. MATERIALS
+        // MeshBasicMaterial is used to replicate the unlit diagram style
+        const matWhite = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const matGray = new THREE.MeshBasicMaterial({ color: 0xcccccc });
+
+        const matVert = new THREE.MeshBasicMaterial({ map: texVertical });
+        const matHorz = new THREE.MeshBasicMaterial({ map: texHorizontal });
+        const matDiag = new THREE.MeshBasicMaterial({ map: texDiagonal });
+
+        const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+
+        // Helper function to create a mesh with thick black outline edges
+        function createDiagramMesh(geometry, materials) {
+            const mesh = new THREE.Mesh(geometry, materials);
+            const edges = new THREE.EdgesGeometry(geometry);
+            const lineSegments = new THREE.LineSegments(edges, edgeMaterial);
+            mesh.add(lineSegments);
+            return mesh;
+        }
+
+        // 4. OBJECT CREATION        
+        const cubeSize = 1;
+        const plateSize = 1;
+        const plateThickness = 0.15;
+        const gap = 0.15;
+        const offset = (cubeSize / 2) + gap + (plateThickness / 2); // 0.5 + 0.15 + 0.075 = 0.725
+
+        // --- PART A: Central Striped Cube ---
+        // Material order in Three.js BoxGeometry: +x, -x, +y, -y, +z, -z
+        const centralCubeGeometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+        const centralCubeMaterials = [
+            matVert,  // +x face (Appears on the LEFT on screen from our angle)
+            matWhite, // -x face (Hidden)
+            matWhite, // +y face (Hidden)
+            matDiag,  // -y face (Appears on the BOTTOM on screen)
+            matHorz,  // +z face (Appears on the RIGHT on screen)
+            matWhite  // -z face (Hidden)
+        ];
+        const centralCube = createDiagramMesh(centralCubeGeometry, centralCubeMaterials);
+        scene.add(centralCube);
+
+        // --- PART B: Top-Left Hovering Plate (+X offset) ---
+        const topLeftPlateGeo = new THREE.BoxGeometry(plateThickness, plateSize, plateSize);
+        const topLeftPlateMats = [
+            matWhite, // +x (Front large white face)
+            matWhite, // -x (Hidden)
+            matWhite, // +y (Hidden)
+            matGray,  // -y (Bottom thin gray thickness edge)
+            matGray,  // +z (Right thin gray thickness edge)
+            matWhite  // -z (Hidden)
+        ];
+        const topLeftPlate = createDiagramMesh(topLeftPlateGeo, topLeftPlateMats);
+        topLeftPlate.position.set(offset, 0, 0); // Offset in +X
+        scene.add(topLeftPlate);
+
+        // --- PART C: Top-Right Hovering Plate (+Z offset) ---
+        const topRightPlateGeo = new THREE.BoxGeometry(plateSize, plateSize, plateThickness);
+        const topRightPlateMats = [
+            matGray,  // +x (Left thin gray thickness edge)
+            matWhite, // -x (Hidden)
+            matWhite, // +y (Hidden)
+            matGray,  // -y (Bottom thin gray thickness edge)
+            matWhite, // +z (Front large white face)
+            matWhite  // -z (Hidden)
+        ];
+        const topRightPlate = createDiagramMesh(topRightPlateGeo, topRightPlateMats);
+        topRightPlate.position.set(0, 0, offset); // Offset in +Z
+        scene.add(topRightPlate);
+
+        // --- PART D: Bottom Hovering Plate (-Y offset) ---
+        const bottomPlateGeo = new THREE.BoxGeometry(plateSize, plateThickness, plateSize);
+        const bottomPlateMats = [
+            matGray,  // +x (Top-left thin gray thickness edge)
+            matWhite, // -x (Hidden)
+            matWhite, // +y (Hidden)
+            matWhite, // -y (Bottom large white face)
+            matGray,  // +z (Top-right thin gray thickness edge)
+            matWhite  // -z (Hidden)
+        ];
+        const bottomPlate = createDiagramMesh(bottomPlateGeo, bottomPlateMats);
+        bottomPlate.position.set(0, -offset, 0); // Offset in -Y
+        scene.add(bottomPlate);
+
+        // 5. ANIMATION & RESIZE HANDLING
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update(); // Required if controls.enableDamping or controls.autoRotate are set
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            const aspect = window.innerWidth / window.innerHeight;
+            camera.left = -viewSize * aspect;
+            camera.right = viewSize * aspect;
+            camera.top = viewSize;
+            camera.bottom = -viewSize;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+
+</html>
